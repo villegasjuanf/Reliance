@@ -6,6 +6,7 @@ library(progress)
 library(survival)
 library(plotly)
 library(neuralnet)
+library(Rmpfr)
 
 #Constantes ------------------------------------------------------------
 HIDDEN_SIZE<-c(3,3) #Neuronas en capa oculta
@@ -277,7 +278,7 @@ estados<-reactiveValues(process=F,inference=F)
       for (i in 1:nrow(data.coef)) {
         print(i)
         max_t<-qweibull(0.995,data.coef[i,]$Shape,data.coef[i,]$Scale)
-        t<-seq(0,max_t,max_t/PDIST_X_DOTS)
+        t<-seq(1,max_t,max_t/PDIST_X_DOTS)
         f.Fun<-f_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
         F.Fun<-F_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
         R.Fun<-1-F.Fun
