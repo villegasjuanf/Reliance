@@ -54,7 +54,9 @@ shinyUI(navbarPage(
     actionButton("save","salvar variables"),
     dateRangeInput("dates","Rango del estudio",language = "es",start = "2000-01-01",end = "2020-01-01"),
     plotlyOutput("diasUso"),
-    plotlyOutput("fallasEst")
+    plotlyOutput("fallasEst"),
+    actionButton("reliaFuncs","Calcular"),
+    dataTableOutput("aaa")
     
   ))
 ))
