@@ -237,7 +237,7 @@ estados<-reactiveValues(process=F,inference=F)
       in.nnet[,names(test.coef%>%select(Cat1,Cat2)%>%unique()%>%dummyVar())]<-test.coef%>%select(Cat1,Cat2)%>%unique()%>%dummyVar()
       out.nnet<-compute(model.nnet,in.nnet%>%select(-c(Shape,Scale)))%>%as.data.frame()%>%select(contains("net.result")) #prediccion
       names(out.nnet)<-c("Shape","Scale")
-      out.nnet<-cbind(test.coef%>%select(Cat1,Cat2)%>%unique(),out.nnet)%>%cbind(X=NA,id=NA,R2=NA,n=NA,Cat3=NA)
+      out.nnet<-cbind(test.coef%>%select(Cat1,Cat2)%>%unique(),out.nnet)%>%cbind(id=NA,R2=NA,n=NA,Cat3=NA,X=NA)
       out.nnet$Shape<-exp(out.nnet$Shape*coef.scales$Shape) # desescalado de los datos
       out.nnet$Scale<-out.nnet$Scale*coef.scales$Scale
       print(head(data.coef_()))
