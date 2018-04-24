@@ -14,6 +14,7 @@ LEARN_RATE<-.3 #Tasa de variacion de tasa de aprendizaje
 REP_NNET<-10 #Repeticiones del entrenamiento de la NNet
 FORMATO_FECHA<- "%Y-%m-%d %H:%M:%S" #Formato de fecha para importacion de datos
 PDIST_X_DOTS<-500 #Puntos de la grafica de probabilidad
+WEIBULL_3_PARS<-F #Regresion Weibull de 3 parametros
 
 #Weibull_models con barra de progreso
 Weibull_models_shiny<-function(time,status,id,shift.optimize=F,echo=T){
@@ -92,7 +93,7 @@ estados<-reactiveValues(process=F,inference=F)
                                               id=datax()$Ref),
                                      status=datax()$Event,
                                      id=datax()$Ref,
-                                     shift.optimize=T)
+                                     shift.optimize=WEIBULL_3_PARS)
     print(data.model$coef%>%nrow())
     data.coef<-left_join(data.model$coef,datax()%>%select(Ref,Cat1,Cat2,Cat3)%>%unique(),by=c("id"="Ref"))
     write.csv2(data.coef,"./tmp/data_model_tmp.csv")
@@ -104,7 +105,7 @@ estados<-reactiveValues(process=F,inference=F)
   #carga de datos temporales de la pestana 2
   data.coef_<-reactive({
      if(input$procesar==0){
-       data.coef_<-read.csv2("./tmp/data_model_tmp.csv")}
+       data.coef_<-read.csv2("./tmp/data_model_tmp.csv")%>%select(-X)}
     else{
       data.coef_<-data.coef()
     }
@@ -237,7 +238,7 @@ estados<-reactiveValues(process=F,inference=F)
       in.nnet[,names(test.coef%>%select(Cat1,Cat2)%>%unique()%>%dummyVar())]<-test.coef%>%select(Cat1,Cat2)%>%unique()%>%dummyVar()
       out.nnet<-compute(model.nnet,in.nnet%>%select(-c(Shape,Scale)))%>%as.data.frame()%>%select(contains("net.result")) #prediccion
       names(out.nnet)<-c("Shape","Scale")
-      out.nnet<-cbind(test.coef%>%select(Cat1,Cat2)%>%unique(),out.nnet)%>%cbind(id=NA,R2=NA,n=NA,Cat3=NA,X=NA)
+      out.nnet<-cbind(test.coef%>%select(Cat1,Cat2)%>%unique(),out.nnet)%>%cbind(id=NA,R2=NA,n=NA,Cat3=NA)
       out.nnet$Shape<-exp(out.nnet$Shape*coef.scales$Shape) # desescalado de los datos
       out.nnet$Scale<-out.nnet$Scale*coef.scales$Scale
       print(head(data.coef_()))
