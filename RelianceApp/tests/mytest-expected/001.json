@@ -1,0 +1,43 @@
+{
+  "input": {
+    "file": {
+      "name": [
+        "test.csv"
+      ],
+      "size": [
+        46675
+      ],
+      "type": [
+        "text/csv"
+      ],
+      "datapath": [
+        "0.csv"
+      ]
+    },
+    "inferencia": 0,
+    "metodo": "nnet",
+    "procesar": 1
+  },
+  "output": {
+    "data": {
+      "colnames": [
+        "Marca",
+        "Ciudad",
+        "Serie",
+        "Evento",
+        "Fecha",
+        "Costo_Corr",
+        "Costo_Prev"
+      ],
+      "options": null,
+      "evalOptions": null,
+      "searchDelay": 500,
+      "callback": "function(oTable) {}",
+      "escape": true
+    },
+    "resData": "<table  class = 'table shiny-table table- spacing-s' style = 'width:auto;'>\n<thead> <tr> <th style='text-align: left;'> Marca <\/th> <th style='text-align: left;'> Ciudad <\/th> <th style='text-align: right;'> Nro_datos <\/th>  <\/tr> <\/thead> <tbody>\n  <tr> <td> GMC- <\/td> <td> BOG- <\/td> <td align=\"right\"> 201 <\/td> <\/tr>\n  <tr> <td> VOLV <\/td> <td> MED- <\/td> <td align=\"right\"> 217 <\/td> <\/tr>\n   <\/tbody> <\/table>"
+  },
+  "export": {
+
+  }
+}
