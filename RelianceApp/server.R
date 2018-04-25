@@ -14,9 +14,10 @@ THRESHOLD<-1e-4 #Tolerancia absoluta de la NNet
 LEARN_RATE<-.3 #Tasa de variacion de tasa de aprendizaje
 REP_NNET<-10 #Repeticiones del entrenamiento de la NNet
 FORMATO_FECHA<- "%Y-%m-%d %H:%M:%S" #Formato de fecha para importacion de datos
-PDIST_X_DOTS<-500 #Puntos de la grafica de probabilidad
+PDIST_X_DOTS<-200 #Puntos de la grafica de probabilidad
 WEIBULL_3_PARS<-F #Regresion Weibull de 3 parametros
 PRECISION<-NULL #Precision de calculo en numero de bits (NULL = double de 53 bits)
+FUNS_TOL<-1e-9 #valor minimo para calculo de funciones de probabilidad f,F,R,r,H,M
 
 #Weibull_models con barra de progreso
 Weibull_models_shiny<-function(time,status,id,shift.optimize=F,echo=T){
@@ -96,7 +97,6 @@ estados<-reactiveValues(process=F,inference=F)
                                      status=datax()$Event,
                                      id=datax()$Ref,
                                      shift.optimize=WEIBULL_3_PARS)
-    print(data.model$coef%>%nrow())
     data.coef<-left_join(data.model$coef,datax()%>%select(Ref,Cat1,Cat2,Cat3)%>%unique(),by=c("id"="Ref"))
     write.csv2(data.coef,"./tmp/data_model_tmp.csv")
     estados$inference<-F
@@ -243,8 +243,6 @@ estados<-reactiveValues(process=F,inference=F)
       out.nnet<-cbind(test.coef%>%select(Cat1,Cat2)%>%unique(),out.nnet)%>%cbind(id=NA,R2=NA,n=NA,Cat3=NA)
       out.nnet$Shape<-exp(out.nnet$Shape*coef.scales$Shape) # desescalado de los datos
       out.nnet$Scale<-out.nnet$Scale*coef.scales$Scale
-      print(head(data.coef_()))
-      print(head(out.nnet))
       out.nnet<-data.coef_()%>%rbind(out.nnet)
     }
     else{ #Condicion para test de Cox
@@ -270,43 +268,40 @@ estados<-reactiveValues(process=F,inference=F)
   # Objetos del panel 4 ---------------------------------------------------------------------------------
   
   #Calculo de funciones de confiabilidad
-  reliaFuncs<-eventReactive(input$reliaFuncs,{
-    Cost<-datax()%>%group_by(Ref)%>%summarise(C_Corr=mean(C_Corr),C_Prev=mean(C_Prev))
-    data.coef<-data.coef_()%>%left_join(Cost,by=c("id" = "Ref"))
-    funs.data<-data.frame(id=NULL,t=NULL,f_fun=NULL,F_fun=NULL,r_fun=NULL,R_fun=NULL,H_fun=NULL,M_fun=NULL,Cat1=NULL,Cat2=NULL)
-    withProgress(message = "Procesando modelos",detail = "esto tomara unos segundos...",{
-      for (i in 1:nrow(data.coef)) {
-        print(i)
-        max_t<-qweibull(0.995,data.coef[i,]$Shape,data.coef[i,]$Scale)
-        t<-seq(1,max_t,max_t/PDIST_X_DOTS)
-        f.Fun<-f_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
-        F.Fun<-F_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
-        R.Fun<-1-F.Fun
-        r.Fun<-f.Fun/R.Fun
-        H.Fun<-H_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
-        M.Fun<-M_fun(t,data.coef[i,]$Shape,data.coef[i,]$Scale,PRECISION)
-        funs.data<-rbind(funs.data,
-                         data.frame(id=data.coef[i,]$id,
-                                    t=t,
-                                    f_fun=f.Fun%>%as.numeric(),
-                                    F_fun=F.Fun%>%as.numeric(),
-                                    r_fun=r.Fun%>%as.numeric(),
-                                    R_fun=R.Fun%>%as.numeric(),
-                                    H_fun=H.Fun%>%as.numeric(),
-                                    M_fun=M.Fun%>%as.numeric(),
-                                    UEC_Poli_I<-(data.coef[i,]$C_Prev*R.Fun+data.coef[i,]$C_Corr*F.Fun)/(t*R.Fun+M.Fun*F.Fun),
-                                    UEC_Poli_II<-(data.coef[i,]$C_Prev+data.coef[i,]$C_Corr*H.Fun)/t,
-                                    Cat1=coef.model$Cat1[i],
-                                    Cat2=coef.model$Cat2[i]
-                         )
-        )
-        incProgress(1/nrow(data.coef_()))
-      }
-    })
+  reliaFuncs<-reactive({
+    Cost<-datax()%>%group_by(Ref)%>%summarise(C_Prev=mean(C_Prev),C_Corr=mean(C_Corr))
+    data.coef<-data.coef_()%>%filter(id==input$selReliaId)%>%left_join(Cost,by=c("id" = "Ref"))
+    
+    i<-1
+    max_t<-qweibull(1-FUNS_TOL,data.coef$Shape[i],data.coef$Scale[i])
+    funs.data<-data.frame(t=seq(1,max_t,length.out=PDIST_X_DOTS))
+    summary(data.coef)
+    funs.data<-funs.data%>%mutate(f.fun=f_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
+                                  F.fun=F_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
+                                  R.fun=(1-F.fun)%>%as.numeric(),
+                                  r.fun=(f.fun/R.fun)%>%as.numeric(),
+                                  H.fun=H_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
+                                  M.fun=M_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
+                                  Poli.I=(data.coef$C_Prev*R.fun+data.coef$C_Corr*F.fun)/(t*R.fun+M.fun*F.fun)*365,
+                                  Poli.II=(data.coef$C_Prev+data.coef$C_Corr*H.fun)/t)*365
     return(funs.data)
   })
   
-  output$aaa<-renderDataTable({reliaFuncs()})
+  output$selRelia<-renderUI({selectInput("selReliaId","Seleccionar Id:",choices = data.coef_()$id)})
+  
+  output$reliaPlt<-renderPlotly({
+    data<-reliaFuncs()
+    print(data)
+    plt<-ggplot(data,aes(x=t))+theme_dark()
+    plt.f<-plt+geom_line(aes(y=f.fun))
+    plt.F<-plt+geom_line(aes(y=F.fun))
+    plt.r<-plt+geom_line(aes(y=r.fun))
+    plt.H<-plt+geom_line(aes(y=H.fun))
+    plt.I<-plt+geom_line(aes(y=Poli.I))
+    plt.II<-plt+geom_line(aes(y=Poli.II))
+    
+    subplot(plt.f,plt.F,plt.r,plt.H,plt.I,plt.II,nrows = 3,shareX = T)
+    })
   
   
   #dias y probabilidad de falla en periodo de tiempo de estudio
@@ -348,7 +343,6 @@ estados<-reactiveValues(process=F,inference=F)
   output$fallasEst<-renderPlotly({
     data<-FallasEst()%>%
       mutate(Cat0=paste(Cat1,Cat2))%>%select(Cat0,diff.F)
-    print(data)
     ggplot(data,aes(x=reorder(Cat0,diff.F),y=diff.F,fill=Cat0))+geom_col(width = 0.8)+geom_rug(sides = "left",color="gray")
     
   })

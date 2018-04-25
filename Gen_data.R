@@ -18,7 +18,7 @@ Gen.data <- function() {
   FFORMA <- c(0.1, 6.5) #Rango del factor de forma para dispositivo
   FESCALA <- c(100, 5000) #Rango del factor de escala para dispositivo
   N.NAS <- 0 #Cantidad de NA por serie
-  n=50 #Cantidad de datos por serie
+  n=30 #Cantidad de datos por serie
   pOnes=1 #
   dc<-c(.8,.4) #Factor de dispersión para forma en serie y marca
   de<-c(.8,.4) #Factor de dispersión para escala en serie y marca

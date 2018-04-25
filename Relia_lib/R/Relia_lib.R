@@ -125,16 +125,25 @@ r_fun<-function(t,shape,scale,precision=NULL){
 }
 
 H_fun<-function(tp,shape,scale=1,precision=NULL){
-  H_apply<-function(y){
-    z<-tryCatch(integrateR(function(x) r_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
-    return(asNumeric(z$value))
-  }
+  if(!is.null(precision)){
+    H_apply<-function(y){
+      z<-tryCatch(integrateR(function(x) r_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
+      return(asNumeric(z$value))}
+    }else{
+      H_apply<-function(y){
+        z<-tryCatch(integrate(function(x) r_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
+        return(asNumeric(z$value))}
+    }
   return(sapply(tp,H_apply))
 }
 
 M_fun<-function(tp,shape,scale=1,precision=NULL){
   M_apply<-function(y){
-    z<-tryCatch(integrateR(function(x) x*f_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
+    if(!is.null(precision)){
+      z<-tryCatch(integrateR(function(x) x*f_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
+    }else{
+      z<-tryCatch(integrate(function(x) x*f_fun(x,shape,scale,precision),1,y),error=function(e) list(value=NaN))
+    }
     return(asNumeric(z$value/(F_fun(y,shape,scale,precision))))
   }
   return(sapply(tp,M_apply))

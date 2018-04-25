@@ -54,9 +54,10 @@ shinyUI(navbarPage(
     actionButton("save","salvar variables"),
     dateRangeInput("dates","Rango del estudio",language = "es",start = "2000-01-01",end = "2020-01-01"),
     plotlyOutput("diasUso"),
-    plotlyOutput("fallasEst"),
-    actionButton("reliaFuncs","Calcular"),
-    dataTableOutput("aaa")
-    
+    plotlyOutput("fallasEst")
+  )),
+  tabPanel("5. Pronosticos",verticalLayout(
+    uiOutput("selRelia"),
+    plotlyOutput("reliaPlt",height = "600px")
   ))
 ))
