@@ -15,15 +15,15 @@ caracteristicas <- list(c1 = 100:105,
 
 Gen.data <- function() {
   
-  FFORMA <- c(0.1, 6.5) #Rango del factor de forma para dispositivo
-  FESCALA <- c(100, 5000) #Rango del factor de escala para dispositivo
+  FFORMA <- c(0.9, 8.5) #Rango del factor de forma para dispositivo
+  FESCALA <- c(400, 1000) #Rango del factor de escala para dispositivo
   N.NAS <- 0 #Cantidad de NA por serie
   n=30 #Cantidad de datos por serie
   pOnes=1 #
-  dc<-c(.8,.4) #Factor de dispersión para forma en serie y marca
-  de<-c(.8,.4) #Factor de dispersión para escala en serie y marca
-  Costo=list(Prev=c(100,10), #Costos de mantenimiento y dispersión
-             Corr=c(3000,400))
+  dc<-c(.9,.5) #Factor de dispersión para forma en serie y marca
+  de<-c(.9,.5) #Factor de dispersión para escala en serie y marca
+  Costo=list(Prev=c(100,0), #Costos de mantenimiento y dispersión
+             Corr=c(1000,0))
 
   
   #Determinación de coeficientes por serie

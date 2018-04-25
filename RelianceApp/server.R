@@ -17,7 +17,7 @@ FORMATO_FECHA<- "%Y-%m-%d %H:%M:%S" #Formato de fecha para importacion de datos
 PDIST_X_DOTS<-200 #Puntos de la grafica de probabilidad
 WEIBULL_3_PARS<-F #Regresion Weibull de 3 parametros
 PRECISION<-NULL #Precision de calculo en numero de bits (NULL = double de 53 bits)
-FUNS_TOL<-1e-9 #valor minimo para calculo de funciones de probabilidad f,F,R,r,H,M
+FUNS_TOL<-1e-5 #valor minimo para calculo de funciones de probabilidad f,F,R,r,H,M
 
 #Weibull_models con barra de progreso
 Weibull_models_shiny<-function(time,status,id,shift.optimize=F,echo=T){
@@ -282,8 +282,8 @@ estados<-reactiveValues(process=F,inference=F)
                                   r.fun=(f.fun/R.fun)%>%as.numeric(),
                                   H.fun=H_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
                                   M.fun=M_fun(t,data.coef$Shape,data.coef$Scale,PRECISION)%>%as.numeric(),
-                                  Poli.I=(data.coef$C_Prev*R.fun+data.coef$C_Corr*F.fun)/(t*R.fun+M.fun*F.fun)*365,
-                                  Poli.II=(data.coef$C_Prev+data.coef$C_Corr*H.fun)/t)*365
+                                  Poli.I=(data.coef$C_Prev*R.fun+data.coef$C_Corr*F.fun)/(t*R.fun+M.fun*F.fun),
+                                  Poli.II=(data.coef$C_Prev+data.coef$C_Corr*H.fun)/t)
     return(funs.data)
   })
   
@@ -291,14 +291,15 @@ estados<-reactiveValues(process=F,inference=F)
   
   output$reliaPlt<-renderPlotly({
     data<-reliaFuncs()
+    maxt<-max(data$t)
     print(data)
     plt<-ggplot(data,aes(x=t))+theme_dark()
     plt.f<-plt+geom_line(aes(y=f.fun))
     plt.F<-plt+geom_line(aes(y=F.fun))
     plt.r<-plt+geom_line(aes(y=r.fun))
     plt.H<-plt+geom_line(aes(y=H.fun))
-    plt.I<-plt+geom_line(aes(y=Poli.I))
-    plt.II<-plt+geom_line(aes(y=Poli.II))
+    plt.I<-ggplot(data[2:nrow(data),],aes(x=t))+theme_dark()+geom_line(aes(y=Poli.I))
+    plt.II<-ggplot(data[2:nrow(data),],aes(x=t))+theme_dark()+geom_line(aes(y=Poli.II))
     
     subplot(plt.f,plt.F,plt.r,plt.H,plt.I,plt.II,nrows = 3,shareX = T)
     })
